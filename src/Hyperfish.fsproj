@@ -1,12 +1,25 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
+    <Compile Include="Vector.fs" />
+    <Compile Include="Shape.fs" />
+    <Compile Include="Styling.fs" />
+    <Compile Include="Letters.fs" />
+    <Compile Include="Figures.fs" />
+    <Compile Include="Fishy.fs" />
+    <Compile Include="Fishier.fs" />
+    <Compile Include="Box.fs" />
+    <Compile Include="Picture.fs" />
+    <!-- <Compile Include="Lens.fs" /> -->
+    <!-- <Compile Include="Shade.fs" /> -->
+    <Compile Include="Transforms.fs" />
+    <!-- <Compile Include="Reform.fs" /> -->
+    <Compile Include="Stack.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
-
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
