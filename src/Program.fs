@@ -1,13 +1,13 @@
-// Learn more about F# at http://docs.microsoft.com/dotnet/fsharp
+module Program = 
 
-open System
+    open Microsoft.Extensions.Hosting
+    open Giraffe
+    open Giraffe.GiraffeViewEngine
 
-// Define a function to construct a message to print
-let from whom =
-    sprintf "from %s" whom
+    let createHostBuilder args =
+        Host.CreateDefaultBuilder(args)
 
-[<EntryPoint>]
-let main argv =
-    let message = from "F#" // Call the function
-    printfn "Hello world %s" message
-    0 // return an integer exit code
+    [<EntryPoint>]
+    let main argv =
+        createHostBuilder(argv).Build().Run()
+        0

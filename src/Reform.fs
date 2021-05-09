@@ -6,6 +6,7 @@ open Styling
 open Box
 open Lens
 open Shade
+open Giraffe.GiraffeViewEngine
 
 type Bounds = (int * int)
 
@@ -177,77 +178,104 @@ let getFillBrush { fillColor = fc } =
   | Black -> "black" 
   | Grey -> "grey"
   | White -> "white"
-  
+
+let svg = tag "svg"
+
+let _stroke = attr "stroke" 
+let _blackstroke = _stroke "black"
+let _fill = attr "fill"
+let _nonefill = _fill "none" 
+let _strokeWidth = attr "strokeWidth" 
+let _strokeLineCap = attr "strokeLineCap"
+let _d = attr "d"
+
+let line (lineShape : LineShape) : XmlNode = 
+  match lineShape with 
+  | { lineStart = { x = x1; y = y1 } 
+      lineEnd = { x = x2; y = y2 } } -> 
+  let pt n v = v |> sprintf "%f" |> attr n
+  let attrs = 
+    [ pt "x1" x1 
+      pt "y1" y1
+      pt "x2" x2 
+      pt "y2" y2 
+      _stroke "green" ]
+  tag "line" attrs []
+
+let polygon (polygonShape : PolygonShape) : XmlNode = 
+  match polygonShape with 
+  | { points = pts } -> 
+    let pt { x = x; y = y } = sprintf "%f,%f" x y
+    let s = pts |> List.map pt |> List.fold (fun acc it -> if acc = "" then it else acc + " " + it) ""
+    let attrs = 
+      [ _blackstroke
+        _nonefill
+        attr "points" s ]
+    tag "polygon" attrs [] 
+
+let curve (style : Style) (curveShape : CurveShape) : XmlNode = 
+  match curveShape with 
+  | { point1 = { x = x1; y = y1 }
+      point2 = { x = x2; y = y2 } 
+      point3 = { x = x3; y = y3 } 
+      point4 = { x = x4; y = y4 } } ->
+    let d = sprintf "M%f %f C %f %f, %f %f, %f %f" x1 y1 x2 y2 x3 y3 x4 y4
+    let strokeWidth = getStrokeWidthFromStyle style.stroke
+    let (strokeColor, sw) = 
+      match style.stroke with 
+      | Some stroke -> getStrokePen stroke
+      | None -> ("none", strokeWidth)
+    let fillColor = 
+      match style.fill with 
+      | Some fill -> getFillBrush fill
+      | None -> "none"
+    let attrs  =
+        [ _stroke strokeColor
+          _fill fillColor
+          _strokeWidth (sprintf "%f" sw)
+          _strokeLineCap "butt"
+          _d d ]
+    tag "path" attrs []
+
+let path (style : Style) (pathShape : Vector * BezierShape list) : XmlNode = 
+  match pathShape with 
+  | ({ x = x; y = y }, beziers) -> 
+    let nextShape { controlPoint1 = { x = x1; y = y1 }
+                    controlPoint2 = { x = x2; y = y2 }
+                    endPoint      = { x = x3; y = y3 } } =
+      sprintf "C %f %f, %f %f, %f %f" x1 y1 x2 y2 x3 y3 
+    let startStr = sprintf "M%f %f" x y
+    let nextStrs = beziers |> List.map nextShape 
+    let strs = nextStrs @ [ "Z" ]
+    let d = startStr :: strs |> String.concat " "
+    let strokeWidth = getStrokeWidthFromStyle style.stroke
+    //let strokeColor = getStrokeColorFromStyle style.stroke
+    //let colorName = getStrokeColorName strokeColor
+    let (strokeColor, sw) = 
+      match style.stroke with 
+      | Some stroke -> getStrokePen stroke
+      | None -> ("none", strokeWidth)
+    let fillColor = 
+      match style.fill with 
+      | Some fill -> getFillBrush fill
+      | None -> "none"
+    let attrs =
+      [ _stroke strokeColor
+        _fill fillColor
+        _strokeWidth (sprintf "%f" sw)
+        _strokeLineCap "butt"
+        _d d ]
+    tag "path" attrs []
+
 let toSvgElement (style : Style) = function 
-    | Line { lineStart = { x = x1; y = y1 } 
-             lineEnd = { x = x2; y = y2 } } ->
-      let lineElement = 
-        line 
-          [ SVGAttr.Stroke "green"
-            X1 x1
-            Y1 y1
-            X2 x2
-            Y2 y2 ] []
-      lineElement
-    | Polygon { points = pts } ->
-      let pt { x = x; y = y } = sprintf "%f,%f" x y
-      let s = pts |> List.map pt |> List.fold (fun acc it -> if acc = "" then it else acc + " " + it) ""
-      let polygonElement = 
-        polygon 
-          [ SVGAttr.Stroke "black"
-            SVGAttr.Fill "none"
-            Points s ] []
-      polygonElement
-    | Curve { point1 = { x = x1; y = y1 }
-              point2 = { x = x2; y = y2 } 
-              point3 = { x = x3; y = y3 } 
-              point4 = { x = x4; y = y4 } } ->
-      let d = sprintf "M%f %f C %f %f, %f %f, %f %f" x1 y1 x2 y2 x3 y3 x4 y4
-      let strokeWidth = getStrokeWidthFromStyle style.stroke
-      let (strokeColor, sw) = 
-        match style.stroke with 
-        | Some stroke -> getStrokePen stroke
-        | None -> ("none", strokeWidth)
-      let fillColor = 
-        match style.fill with 
-        | Some fill -> getFillBrush fill
-        | None -> "none"
-      let curveElement =
-        path 
-          [ SVGAttr.Stroke strokeColor
-            SVGAttr.Fill fillColor
-            SVGAttr.StrokeWidth sw
-            SVGAttr.StrokeLinecap "butt"
-            SVGAttr.D d ] []
-      curveElement
-    | Path ({ x = x; y = y }, beziers) ->
-      let nextShape { controlPoint1 = { x = x1; y = y1 }
-                      controlPoint2 = { x = x2; y = y2 }
-                      endPoint      = { x = x3; y = y3 } } =
-        sprintf "C %f %f, %f %f, %f %f" x1 y1 x2 y2 x3 y3 
-      let startStr = sprintf "M%f %f" x y
-      let nextStrs = beziers |> List.map nextShape 
-      let strs = nextStrs @ [ "Z" ]
-      let d = startStr :: strs |> String.concat " "
-      let strokeWidth = getStrokeWidthFromStyle style.stroke
-      //let strokeColor = getStrokeColorFromStyle style.stroke
-      //let colorName = getStrokeColorName strokeColor
-      let (strokeColor, sw) = 
-        match style.stroke with 
-        | Some stroke -> getStrokePen stroke
-        | None -> ("none", strokeWidth)
-      let fillColor = 
-        match style.fill with 
-        | Some fill -> getFillBrush fill
-        | None -> "none"
-      let pathElement =
-        path 
-          [ SVGAttr.Stroke strokeColor
-            SVGAttr.Fill fillColor
-            SVGAttr.StrokeWidth sw
-            SVGAttr.StrokeLinecap "butt"
-            SVGAttr.D d ] []
-      pathElement
+    | Line lineShape ->
+      line lineShape
+    | Polygon polygonShape ->
+      polygon polygonShape
+    | Curve curveShape ->
+      curve style curveShape
+    | Path (vector, beziers) ->
+      path style (vector, beziers)
     | _ -> failwith "unmatched shape in toSvgElement"
 
 let getBackgroundColor = function 
@@ -261,8 +289,8 @@ let view ((bounds, background, shapes) : Model) =
     let fn (shape, style) = 
       (mirrorShape mv >> toSvgElement style) shape      
     let svgElements = shapes |> List.map fn
-    svg [ Style [ BackgroundColor (getBackgroundColor background) ]
-          HTMLAttr.Width svgWidth 
-          HTMLAttr.Height svgHeight 
+    svg [ //Style [ BackgroundColor (getBackgroundColor background) ]
+          attr "width" (sprintf "%d" svgWidth) 
+          attr "height" (sprintf "%d" svgHeight) 
         ]     
         svgElements
