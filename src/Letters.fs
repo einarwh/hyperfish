@@ -3,7 +3,10 @@ module Letters
 open Vector
 open Shape
 
-let fShape = 
+let primary (shapes : Shape list) : (string * Shape) list = 
+  shapes |> List.map (fun s -> ("primary", s))
+
+let fPolygon = 
   let pts = [ 
     { x = 0.30; y = 0.20 } 
     { x = 0.40; y = 0.20 }
@@ -17,9 +20,9 @@ let fShape =
     { x = 0.30; y = 0.80 } ]
   Polygon { points = pts }
 
-let fLetter = [ fShape ]
+let fLetter = primary [ fPolygon ]
 
-let hShape = 
+let hPolygon = 
   let pt01 =  { x = 0.30; y = 0.20 } 
   let pt02 =  { x = 0.40; y = 0.20 } 
   let pt03 =  { x = 0.40; y = 0.45 } 
@@ -35,9 +38,9 @@ let hShape =
   let pts = [ pt01; pt02; pt03; pt04; pt05; pt06; pt07; pt08; pt09; pt10; pt11; pt12 ]
   Polygon { points = pts }
 
-let hLetter = [ hShape ]
+let hLetter = primary [ hPolygon ]
 
-let eShape = 
+let ePolygon = 
   let pt01 =  { x = 0.30; y = 0.20 } 
   let pt02 =  { x = 0.70; y = 0.20 } 
   let pt03 =  { x = 0.70; y = 0.30 } 
@@ -53,7 +56,7 @@ let eShape =
   let pts = [ pt01; pt02; pt03; pt04; pt05; pt06; pt07; pt08; pt09; pt10; pt11; pt12 ]
   Polygon { points = pts }
 
-let eLetter = [ eShape ]
+let eLetter = primary [ ePolygon ]
 
 let nShape = 
   let pt01 =  { x = 0.30; y = 0.20 } 
@@ -69,7 +72,7 @@ let nShape =
   let pts = [ pt01; pt02; pt03; pt04; pt05; pt06; pt07; pt08; pt09; pt10 ]
   Polygon { points = pts }
 
-let nLetter = [ nShape ]
+let nLetter = primary [ nShape ]
 
 let dShape1 = 
   let pt01 =  { x = 0.30; y = 0.20 } 
@@ -91,7 +94,7 @@ let dShape2 =
   let pts = [ pt01; pt02; pt03; pt04; pt05; pt06 ]
   Polygon { points = pts }
 
-let dLetter = [ dShape1; dShape2 ]
+let dLetter = primary [ dShape1; dShape2 ]
 
 let rShape1 = 
   let pt01 =  { x = 0.30; y = 0.20 } 
@@ -115,7 +118,7 @@ let rShape2 =
   let pts = [ pt05; pt06; pt07; pt08 ]
   Polygon { points = pts }
 
-let rLetter = [ rShape1; rShape2 ]
+let rLetter = primary [ rShape1; rShape2 ]
 
 let sShape = 
   let pt01 =  { x = 0.30; y = 0.20 } 
@@ -133,7 +136,7 @@ let sShape =
   let pts = [ pt01; pt02; pt03; pt04; pt05; pt06; pt07; pt08; pt09; pt10; pt11; pt12 ]
   Polygon { points = pts }
 
-let sLetter = [ sShape ]
+let sLetter = primary [ sShape ]
 
 let oShape1 = 
   let pt01 =  { x = 0.30; y = 0.20 } 
@@ -151,4 +154,4 @@ let oShape2 =
   let pts = [ pt05; pt06; pt07; pt08 ]
   Polygon { points = pts }
 
-let oLetter = [ oShape1; oShape2 ]
+let oLetter = primary [ oShape1; oShape2 ]

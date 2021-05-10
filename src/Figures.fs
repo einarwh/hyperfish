@@ -37,3 +37,4 @@ let george =
     Polyline { pts = pts4 }
     Polyline { pts = pts5 } ]
 
+let georgeShapes = george |> List.map (fun shape -> ("primary", shape))

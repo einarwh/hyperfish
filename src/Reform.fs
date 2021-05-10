@@ -121,7 +121,8 @@ let mapNamedShape (box : Box, hue : Hue) (name, shape) : (Shape * Style) =
            lineEnd = v2 } ->
     Line { lineStart = m v1 
            lineEnd = m v2 }, getDefaultStyle name hue sw
-  | _ -> failwith "unmatched shape in mapNamedShape"
+  | Polyline { pts = pts } ->
+    Polyline { pts = pts |> List.map m }, getDefaultStyle name hue sw
 
 let createLensPicture (shapes : (string * Shape) list) : Picture = 
    fun lens ->
@@ -135,6 +136,8 @@ let mirrorShape mirror = function
              lineEnd = lineEnd } ->
       Line { lineStart = mirror lineStart 
              lineEnd = mirror lineEnd }
+    | Polyline { pts = pts } ->
+      Polyline { pts = pts |> List.map mirror }
     | Polygon { points = pts } ->
       Polygon { points = pts |> List.map mirror }
     | Curve { point1 = v1
@@ -147,7 +150,6 @@ let mirrorShape mirror = function
               point4 = mirror v4 }
     | Path (start, beziers) ->        
       Path (mirror start, beziers |> List.map (mapBezier mirror))
-    | x -> x
 
 let getStrokeWidthFromStyle = function 
   | Some strokeStyle ->
@@ -213,6 +215,17 @@ let polygon (polygonShape : PolygonShape) : XmlNode =
         attr "points" s ]
     tag "polygon" attrs [] 
 
+let polyline (polylineShape : PolylineShape) : XmlNode = 
+  match polylineShape with 
+  | { pts = pts } -> 
+    let pt { x = x; y = y } = sprintf "%f,%f" x y
+    let s = pts |> List.map pt |> List.fold (fun acc it -> if acc = "" then it else acc + " " + it) ""
+    let attrs = 
+      [ _blackstroke
+        _nonefill
+        attr "points" s ]
+    tag "polyline" attrs [] 
+
 let curve (style : Style) (curveShape : CurveShape) : XmlNode = 
   match curveShape with 
   | { point1 = { x = x1; y = y1 }
@@ -270,13 +283,14 @@ let path (style : Style) (pathShape : Vector * BezierShape list) : XmlNode =
 let toSvgElement (style : Style) = function 
     | Line lineShape ->
       line lineShape
+    | Polyline polylineShape ->
+      polyline polylineShape
     | Polygon polygonShape ->
       polygon polygonShape
     | Curve curveShape ->
       curve style curveShape
     | Path (vector, beziers) ->
       path style (vector, beziers)
-    | _ -> failwith "unmatched shape in toSvgElement"
 
 let getBackgroundColor = function 
   | Grey -> "#CCCCCC"
