@@ -10,7 +10,7 @@
     <Compile Include="Styling.fs" />
     <Compile Include="Letters.fs" />
     <Compile Include="Figures.fs" />
-    <Compile Include="Fishy.fs" />
+    <!-- <Compile Include="Fishy.fs" /> -->
     <Compile Include="Fishier.fs" />
     <Compile Include="Box.fs" />
     <!-- <Compile Include="Picture.fs" /> -->
@@ -19,6 +19,8 @@
     <!-- <Compile Include="Transforms.fs" /> -->
     <Compile Include="Reform.fs" />
     <Compile Include="Stack.fs" />
+    <Compile Include="Routing.fs" />
+    <Compile Include="Handler.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <Import Project="..\.paket\Paket.Restore.targets" />

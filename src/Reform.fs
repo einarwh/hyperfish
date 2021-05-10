@@ -283,7 +283,7 @@ let getBackgroundColor = function
   | Black -> "black"
   | White -> "white"       
 
-let view ((bounds, background, shapes) : Model) = 
+let view ((bounds, background, shapes) : Model) : XmlNode = 
     let (svgWidth, svgHeight) = bounds
     let mv = (mirrorVector <| float svgHeight)
     let fn (shape, style) = 
