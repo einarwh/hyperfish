@@ -38,7 +38,6 @@ let evaluate (stack : Stack) (fn : Function) : Stack =
     code stack
 
 let push (stack : Stack) (v : StackValue) : Stack = 
-  printfn "pushing value %A" v
   match v with 
   | NumberValue _ -> v :: stack 
   | PictureValue _ -> v :: stack 

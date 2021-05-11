@@ -389,7 +389,6 @@ let escherPostHandler (matches : string seq) : HttpHandler =
         match ctx.Request.HasFormContentType with
         | false -> text "Bad request - where is the form?" next ctx
         | true ->
-            printfn "FORM!!! %A" ctx.Request.Form
             match ctx.Request.Form.TryGetValue("number") with 
             | (true, formStringValues) ->
                 let numberStr = formStringValues.[0]
