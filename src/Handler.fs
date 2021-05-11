@@ -376,12 +376,29 @@ let render (s : string) : HttpHandler =
     with 
     | StackUnderflowException -> htmlString "Stack underflow exception!"
     | TypeException msg -> htmlString msg
-    | _ -> htmlString "bad stuff"
+    | ex -> htmlString ex.Message
+
+let handle (s : string) : HttpHandler = 
+    fun (next : HttpFunc) (ctx : HttpContext) -> 
+
+        let strs = s.Split("/") |> List.ofArray |> List.tail
+        try 
+            (handleRequest strs) next ctx
+        with 
+        | StackUnderflowException -> 
+            ctx.SetStatusCode 400
+            (htmlString "Stack underflow exception!") next ctx
+        | TypeException msg -> 
+            ctx.SetStatusCode 400
+            (htmlString msg) next ctx 
+        | ex ->
+            ctx.SetStatusCode 500 
+            (htmlString ex.Message) next ctx
 
 let escherHandler (matches : string seq) : HttpHandler =
     fun (next : HttpFunc) (ctx : HttpContext) ->
         match matches |> Seq.tail |> Seq.tryExactlyOne with 
-        | Some thing -> (render thing) next ctx
+        | Some thing -> (handle thing) next ctx
         | None -> (text "nothing" next ctx)
 
 let escherPostHandler (matches : string seq) : HttpHandler =
