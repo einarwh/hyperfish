@@ -1,6 +1,5 @@
 module Handler
 
-open FSharp.Control.Tasks
 open Microsoft.AspNetCore.Http
 open Giraffe
 open Giraffe.GiraffeViewEngine
@@ -184,34 +183,52 @@ let dupCode : Stack -> Stack =
             PictureValue p :: stack
         | _ -> raise (TypeException "Expected a picture as the first argument on the stack")
 
-let functionDictionary = dict [
-    ("dup", dupCode)
-    ("turn", transformCode turn)
-    ("flip", transformCode flip) 
-    ("toss", transformCode toss)
-    ("hue", transformCode rehue) 
-    ("above", pairCombinatorCode above) 
-    ("beside", pairCombinatorCode beside) 
-    ("over", pairCombinatorCode over)
-    ("above-ratio", weightedPairCombinatorCode aboveRatio) 
-    ("beside-ratio", weightedPairCombinatorCode besideRatio) 
-    ("quartet", quartetCombinatorCode quartet)
-    ("nonet", nonetCombinatorCode nonet)
-    ("t-tile-1", transformCode ttile1)
-    ("t-tile-2", transformCode ttile2) 
-    ("u-tile-1", transformCode utile1) 
-    ("u-tile-2", transformCode utile2) 
-    ("u-tile-3", transformCode utile3) 
-    ("side-1", numberCombinatorCode sideNS) 
-    ("side-2", numberCombinatorCode sideEW) 
-    ("corner-1", numberCombinatorCode cornerNWSE) 
-    ("corner-2", numberCombinatorCode cornerNESW) 
-    ("square-limit", numberCombinatorCode squareLimit) 
+let transformFunction (name : string) (transform : Picture -> Picture) : Function = 
+    { Name = name; Parameters = [PictureType]; Code = transformCode transform }
+
+let pairCombinatorFunction (name : string) (combinator : Picture -> Picture -> Picture) : Function = 
+    { Name = name; Parameters = [PictureType; PictureType]; Code = pairCombinatorCode combinator }
+
+let weightedPairCombinatorFunction (name : string) (combinator : int -> int -> Picture -> Picture -> Picture) : Function = 
+    { Name = name; Parameters = [PictureType; PictureType]; Code = weightedPairCombinatorCode combinator }
+
+let numberCombinatorFunction (name : string) (combinator : int -> Picture -> Picture) : Function = 
+    { Name = name; Parameters = [NumberType; PictureType]; Code = numberCombinatorCode combinator }
+
+let quartetCombinatorFunction (name : string) (combinator : Picture -> Picture -> Picture -> Picture -> Picture) : Function = 
+    { Name = name; Parameters = [PictureType; PictureType; PictureType; PictureType]; Code = quartetCombinatorCode combinator }
+
+let nonetCombinatorFunction (name : string) (combinator : Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture) : Function = 
+    { Name = name; Parameters = [PictureType; PictureType; PictureType; PictureType]; Code = nonetCombinatorCode combinator }
+
+let functionDictionary : System.Collections.Generic.IDictionary<string, Function> = dict [
+    ("dup", { Name = "dup"; Parameters = [PictureType]; Code = dupCode })
+    ("turn", transformFunction "turn" turn)
+    ("flip", transformFunction "flip" flip) 
+    ("toss", transformFunction "toss" toss)
+    ("hue", transformFunction "hue" rehue) 
+    ("above", pairCombinatorFunction "above" above) 
+    ("beside", pairCombinatorFunction "beside" beside) 
+    ("over", pairCombinatorFunction "over" over)
+    ("above-ratio", weightedPairCombinatorFunction "above-ratio" aboveRatio) 
+    ("beside-ratio", weightedPairCombinatorFunction "beside-ratio" besideRatio) 
+    ("quartet", quartetCombinatorFunction "quartet" quartet)
+    ("nonet", nonetCombinatorFunction "nonet" nonet)
+    ("t-tile-1", transformFunction "ttile1" ttile1)
+    ("t-tile-2", transformFunction "ttile2" ttile2) 
+    ("u-tile-1", transformFunction "utile1" utile1) 
+    ("u-tile-2", transformFunction "utile2" utile2) 
+    ("u-tile-3", transformFunction "utile3" utile3) 
+    ("side-1", numberCombinatorFunction "side-1" sideNS) 
+    ("side-2", numberCombinatorFunction "side-2" sideEW) 
+    ("corner-1", numberCombinatorFunction "corner-1" cornerNWSE) 
+    ("corner-2", numberCombinatorFunction "corner-2" cornerNESW) 
+    ("square-limit", numberCombinatorFunction "square-limit" squareLimit) 
 ]
 
 let tryLookupFunction (name : string) : Function option =
     match functionDictionary.TryGetValue(name) with 
-    | (true, code) -> Some { Name = name; Code = code }
+    | (true, f) -> Some f
     | _ -> None
 
 let tryParseFunctionValue (s : string) : StackValue option =
@@ -234,10 +251,10 @@ let rec tryFindFirstPicture (stack : Stack) : Picture option =
 
 let toSvg (picture : Picture) : XmlNode =
     let box = { a = { x = 100.; y = 100. }
-                b = { x = 200.; y = 0. }
-                c = { x = 0.; y = 200. } }
+                b = { x = 400.; y = 0. }
+                c = { x = 0.; y = 400. } }
     let lens = (box, Blackish)
-    view ((400, 400), Grey, picture lens)
+    view ((600, 600), Grey, picture lens)
 
 let handleRequest stackStrings = 
     let values = stackStrings |> List.map parseStackValue
@@ -288,10 +305,24 @@ let handleRequest stackStrings =
         let clearLink = a [ attr "href" "/escher" ] [ str "clear" ] 
         clearLink :: links
 
-    let operationNames = functionDictionary |> Seq.map (fun kvp -> kvp.Key) |> Seq.toList
+    let rec legalOperation (parameters : ParamType list) (stack : Stack): bool = 
+        match (parameters, stack) with 
+        | [], _ -> true
+        | (PictureType :: restParams, PictureValue _ :: restStack) -> legalOperation restParams restStack
+        | (NumberType :: restParams, NumberValue _ :: restStack) -> legalOperation restParams restStack
+        | _ -> false
+
+    let operationNames = 
+        functionDictionary 
+        |> Seq.filter (fun kvp -> legalOperation kvp.Value.Parameters stk) 
+        |> Seq.map (fun kvp -> kvp.Key) 
+        |> Seq.toList
+
     let operationLinks = operationNames |> List.map (fun n -> a [ attr "href" (createLink n) ] [ str n ] )
     let allOperationLinks = 
-        operationLinks |> withPopLink |> withClearLink
+        operationLinks 
+        |> withPopLink 
+        |> withClearLink
     let operationsDiv = div [] [ 
         h3 [] [ str "Operations" ] 
         div [] [
@@ -307,7 +338,7 @@ let handleRequest stackStrings =
             body [] [
                 table [ attr "valign" "top" ] [
                     tr [ attr "valign" "top" ] [
-                        td [ attr "width" "400" ] [
+                        td [ attr "width" "600" ] [
                             pictureNode
                         ]
                         td [ attr "width" "150" ] [

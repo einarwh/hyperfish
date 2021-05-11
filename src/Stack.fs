@@ -4,6 +4,10 @@ open Shade
 
 exception StackUnderflowException
 
+type ParamType = 
+| PictureType 
+| NumberType
+
 type Stack = StackValue list
 and StackValue = 
 | PictureValue of Picture 
@@ -11,6 +15,7 @@ and StackValue =
 | NumberValue of int 
 and Function = {
   Name : string 
+  Parameters : ParamType list
   Code : Stack -> Stack
 }
 
