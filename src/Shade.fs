@@ -45,6 +45,9 @@ let rec column = function
 let quartet nw ne sw se = 
   above (beside nw ne) (beside sw se)
 
+let selfQuartet p = 
+  quartet p p p p
+
 let nonet nw nm ne mw mm me sw sm se =
   let row w m e = besideRatio 1 2 w (beside m e)
   aboveRatio 1 2
@@ -52,7 +55,10 @@ let nonet nw nm ne mw mm me sw sm se =
     (above 
       (row mw mm me)
       (row sw sm se))
-      
+
+let selfNonet p = 
+  nonet p p p p p p p p p
+
 let over p1 p2 = 
   fun lens ->
     p1 lens @ p2 lens

@@ -213,7 +213,9 @@ let functionDictionary : System.Collections.Generic.IDictionary<string, Function
     ("above-ratio", weightedPairCombinatorFunction "above-ratio" aboveRatio) 
     ("beside-ratio", weightedPairCombinatorFunction "beside-ratio" besideRatio) 
     ("quartet", quartetCombinatorFunction "quartet" quartet)
+    ("self-quartet", transformFunction "self-quartet" selfQuartet)
     ("nonet", nonetCombinatorFunction "nonet" nonet)
+    ("self-nonet", transformFunction "self-nonet" selfNonet)
     ("t-tile-1", transformFunction "ttile1" ttile1)
     ("t-tile-2", transformFunction "ttile2" ttile2) 
     ("u-tile-1", transformFunction "utile1" utile1) 
@@ -274,7 +276,7 @@ let handleRequest stackStrings =
             sprintf "/escher/%s/%s" stackString name
 
     let pictureNames = pictureShapesDictionary |> Seq.map (fun kvp -> kvp.Key) |> Seq.toList
-    let pictureLinks = pictureNames |> List.map (fun n -> a [ attr "href" (createLink n) ] [ str n ] )
+    let pictureLinks = pictureNames |> List.map (fun n -> a [ attr "style" "color:darkred"; attr "href" (createLink n) ] [ str n ] )
     let formActionTarget = [ "escher"; stackString ] |> concatStrings "/" |> sprintf "/%s"
     let picturesDiv = div [] [ 
         h3 [] [ str "Pictures" ] 
@@ -298,11 +300,11 @@ let handleRequest stackStrings =
             let popHref = 
                 if popStackString = "" then "/escher"
                 else sprintf "/escher/%s" popStackString
-            let popLink = a [ attr "href" popHref ] [ str "pop" ] 
+            let popLink = a [ attr "style" "color:darkred"; attr "href" popHref ] [ str "pop" ] 
             popLink :: links
 
     let withClearLink (links : XmlNode list) : XmlNode list =
-        let clearLink = a [ attr "href" "/escher" ] [ str "clear" ] 
+        let clearLink = a [ attr "style" "color:darkred"; attr "href" "/escher" ] [ str "clear" ] 
         clearLink :: links
 
     let rec legalOperation (parameters : ParamType list) (stack : Stack): bool = 
@@ -318,7 +320,7 @@ let handleRequest stackStrings =
         |> Seq.map (fun kvp -> kvp.Key) 
         |> Seq.toList
 
-    let operationLinks = operationNames |> List.map (fun n -> a [ attr "href" (createLink n) ] [ str n ] )
+    let operationLinks = operationNames |> List.map (fun n -> a [ attr "style" "color:darkred"; attr "href" (createLink n) ] [ str n ] )
     let allOperationLinks = 
         operationLinks 
         |> withPopLink 
@@ -334,8 +336,9 @@ let handleRequest stackStrings =
         html [] [
             head [] [
                 title [] [ str "Hyperfish: Hypermedia-driven functional geometry"]
+                link [ attr "rel" "stylesheet"; attr "type" "text/css"; attr "href" "//fonts.googleapis.com/css?family=Open+Sans" ]
             ]
-            body [] [
+            body [ attr "style" "font-family:Open Sans" ] [
                 table [ attr "valign" "top" ] [
                     tr [ attr "valign" "top" ] [
                         td [ attr "width" "600" ] [
