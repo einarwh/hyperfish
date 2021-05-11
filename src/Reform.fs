@@ -187,8 +187,8 @@ let _stroke = attr "stroke"
 let _blackstroke = _stroke "black"
 let _fill = attr "fill"
 let _nonefill = _fill "none" 
-let _strokeWidth = attr "strokeWidth" 
-let _strokeLineCap = attr "strokeLineCap"
+let _strokeWidth = attr "stroke-width" 
+let _strokeLineCap = attr "stroke-linecap"
 let _d = attr "d"
 
 let line (lineShape : LineShape) : XmlNode = 

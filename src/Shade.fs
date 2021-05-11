@@ -57,7 +57,6 @@ let over p1 p2 =
   fun lens ->
     p1 lens @ p2 lens
 
-
 let rehue p =
   rehueLens >> p
 
