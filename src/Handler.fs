@@ -163,6 +163,14 @@ let nonetCombinatorCode (combinator : Picture -> Picture -> Picture -> Picture -
             | _ -> raise (TypeException "Expected a picture as the second argument on the stack")
         | _ -> raise (TypeException "Expected a picture as the first argument on the stack")
 
+let zoomCombinatorCode (combinator : int -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture) : Stack -> Stack = 
+    fun stack -> 
+        match stack with 
+        | [] -> raise (StackUnderflowException)
+        | NumberValue n :: restStack ->
+            nonetCombinatorCode (combinator n) restStack
+        | _ -> raise (TypeException "Expected a number on the stack.")
+
 let numberCombinatorCode (combinator : int -> Picture -> Picture) : Stack -> Stack = 
     fun stack -> 
         match stack with 
@@ -199,7 +207,10 @@ let quartetCombinatorFunction (name : string) (combinator : Picture -> Picture -
     { Name = name; Parameters = [PictureType; PictureType; PictureType; PictureType]; Code = quartetCombinatorCode combinator }
 
 let nonetCombinatorFunction (name : string) (combinator : Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture) : Function = 
-    { Name = name; Parameters = [PictureType; PictureType; PictureType; PictureType]; Code = nonetCombinatorCode combinator }
+    { Name = name; Parameters = [PictureType; PictureType; PictureType; PictureType; PictureType; PictureType; PictureType; PictureType; PictureType]; Code = nonetCombinatorCode combinator }
+
+let zoomCombinatorFunction (name : string) (combinator : int -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture -> Picture) : Function = 
+    { Name = name; Parameters = [NumberType; PictureType; PictureType; PictureType; PictureType; PictureType; PictureType; PictureType; PictureType; PictureType]; Code = zoomCombinatorCode combinator }
 
 let functionDictionary : System.Collections.Generic.IDictionary<string, Function> = dict [
     ("dup", { Name = "dup"; Parameters = [PictureType]; Code = dupCode })
@@ -216,6 +227,7 @@ let functionDictionary : System.Collections.Generic.IDictionary<string, Function
     ("self-quartet", transformFunction "self-quartet" selfQuartet)
     ("nonet", nonetCombinatorFunction "nonet" nonet)
     ("self-nonet", transformFunction "self-nonet" selfNonet)
+    ("zoom", zoomCombinatorFunction "zoom" zoom)
     ("t-tile-1", transformFunction "ttile1" ttile1)
     ("t-tile-2", transformFunction "ttile2" ttile2) 
     ("u-tile-1", transformFunction "utile1" utile1) 

@@ -59,6 +59,12 @@ let nonet nw nm ne mw mm me sw sm se =
 let selfNonet p = 
   nonet p p p p p p p p p
 
+let zoom n nw nm ne mw mm me sw sm se =
+  let rec aux i = 
+    if i > 0 then nonet nw nm ne mw (aux (i - 1)) me sw sm se
+    else mm
+  aux n
+
 let over p1 p2 = 
   fun lens ->
     p1 lens @ p2 lens
