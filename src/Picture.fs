@@ -1,4 +1,4 @@
-module Shade
+module Picture
 
 open Shape
 open Styling

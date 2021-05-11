@@ -1,4 +1,4 @@
-module Fishier
+module Fish
 
 open Vector
 open Shape

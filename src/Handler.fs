@@ -5,10 +5,10 @@ open Giraffe
 open Giraffe.GiraffeViewEngine
 open Box
 open Lens
-open Reform
-open Shade
+open Transformation
+open Picture
 open Styling
-open Fishier
+open Fish
 open Letters
 open Figures
 open Stack
@@ -198,7 +198,7 @@ let pairCombinatorFunction (name : string) (combinator : Picture -> Picture -> P
     { Name = name; Parameters = [PictureType; PictureType]; Code = pairCombinatorCode combinator }
 
 let weightedPairCombinatorFunction (name : string) (combinator : int -> int -> Picture -> Picture -> Picture) : Function = 
-    { Name = name; Parameters = [PictureType; PictureType]; Code = weightedPairCombinatorCode combinator }
+    { Name = name; Parameters = [NumberType; NumberType; PictureType; PictureType]; Code = weightedPairCombinatorCode combinator }
 
 let numberCombinatorFunction (name : string) (combinator : int -> Picture -> Picture) : Function = 
     { Name = name; Parameters = [NumberType; PictureType]; Code = numberCombinatorCode combinator }

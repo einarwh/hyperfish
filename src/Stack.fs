@@ -1,6 +1,6 @@
 module Stack 
 
-open Shade
+open Picture
 
 exception StackUnderflowException
 

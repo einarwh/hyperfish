@@ -10,14 +10,11 @@
     <Compile Include="Styling.fs" />
     <Compile Include="Letters.fs" />
     <Compile Include="Figures.fs" />
-    <!-- <Compile Include="Fishy.fs" /> -->
-    <Compile Include="Fishier.fs" />
+    <Compile Include="Fish.fs" />
     <Compile Include="Box.fs" />
-    <!-- <Compile Include="Picture.fs" /> -->
     <Compile Include="Lens.fs" />
-    <Compile Include="Shade.fs" />
-    <!-- <Compile Include="Transforms.fs" /> -->
-    <Compile Include="Reform.fs" />
+    <Compile Include="Picture.fs" />
+    <Compile Include="Transformation.fs" />
     <Compile Include="Stack.fs" />
     <Compile Include="Routing.fs" />
     <Compile Include="Handler.fs" />

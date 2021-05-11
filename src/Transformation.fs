@@ -1,11 +1,11 @@
-module Reform
+module Transformation
 
 open Vector
 open Shape
 open Styling
 open Box
 open Lens
-open Shade
+open Picture
 open Giraffe.GiraffeViewEngine
 
 type Bounds = (int * int)
