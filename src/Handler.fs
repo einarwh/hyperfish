@@ -1,5 +1,6 @@
 module Handler
 
+open FSharp.Control.Tasks
 open Microsoft.AspNetCore.Http
 open Giraffe
 open Giraffe.GiraffeViewEngine
@@ -15,20 +16,35 @@ open Stack
 
 exception TypeException of string
 
+let concatStrings (s : string) (strings : string seq) = 
+    System.String.Join(s, strings)
+
+let pictureShapesDictionary = dict [
+    "blank", []
+    "fish", fishShapes 
+    "george", georgeShapes
+    "f-letter", fLetter
+    "h-letter", hLetter
+    "e-letter", eLetter
+    "n-letter", nLetter
+    "d-letter", dLetter
+    "r-letter", rLetter
+    "s-letter", sLetter
+    "o-letter", oLetter
+]
+
+let tailless list = 
+    match List.rev list with 
+    | [] -> []
+    | h :: t -> List.rev t
+
+let toStackString (strs : string seq) : string = 
+    concatStrings "/" strs
+
 let tryLookupPicture (name : string) : Picture option = 
     let maybeShapes = 
-        match name with 
-        | "blank" -> Some []
-        | "fish" -> Some fishShapes 
-        | "george" -> Some georgeShapes
-        | "f-letter" -> Some fLetter
-        | "h-letter" -> Some hLetter
-        | "e-letter" -> Some eLetter
-        | "n-letter" -> Some nLetter
-        | "d-letter" -> Some dLetter
-        | "r-letter" -> Some rLetter
-        | "s-letter" -> Some sLetter
-        | "o-letter" -> Some oLetter
+        match pictureShapesDictionary.TryGetValue(name) with 
+        | (true, shapes) -> Some shapes 
         | _ -> None
     maybeShapes |> Option.map (fun shapes -> createLensPicture shapes) 
 
@@ -42,6 +58,12 @@ let tryParseNumber (str : string) : int option =
 
 let tryParseNumberValue (s : string) : StackValue option = 
     s |> tryParseNumber |> Option.map NumberValue
+
+let popCode : Stack -> Stack = 
+    fun stack -> 
+        match stack with 
+        | [] -> raise (StackUnderflowException)
+        | _ :: restStack -> restStack
 
 let transformCode (transform : Picture -> Picture) : Stack -> Stack = 
     fun stack ->    
@@ -142,7 +164,6 @@ let nonetCombinatorCode (combinator : Picture -> Picture -> Picture -> Picture -
             | _ -> raise (TypeException "Expected a picture as the second argument on the stack")
         | _ -> raise (TypeException "Expected a picture as the first argument on the stack")
 
-
 let numberCombinatorCode (combinator : int -> Picture -> Picture) : Stack -> Stack = 
     fun stack -> 
         match stack with 
@@ -155,50 +176,42 @@ let numberCombinatorCode (combinator : int -> Picture -> Picture) : Stack -> Sta
             | _ -> raise (TypeException "Expected a picture as the second argument on the stack")
         | _ -> raise (TypeException "Expected a number as the first argument on the stack")
 
+let dupCode : Stack -> Stack = 
+    fun stack -> 
+        match stack with 
+        | [] -> raise (StackUnderflowException)
+        | PictureValue p :: _ -> 
+            PictureValue p :: stack
+        | _ -> raise (TypeException "Expected a picture as the first argument on the stack")
+
+let functionDictionary = dict [
+    ("dup", dupCode)
+    ("turn", transformCode turn)
+    ("flip", transformCode flip) 
+    ("toss", transformCode toss)
+    ("hue", transformCode rehue) 
+    ("above", pairCombinatorCode above) 
+    ("beside", pairCombinatorCode beside) 
+    ("over", pairCombinatorCode over)
+    ("above-ratio", weightedPairCombinatorCode aboveRatio) 
+    ("beside-ratio", weightedPairCombinatorCode besideRatio) 
+    ("quartet", quartetCombinatorCode quartet)
+    ("nonet", nonetCombinatorCode nonet)
+    ("t-tile-1", transformCode ttile1)
+    ("t-tile-2", transformCode ttile2) 
+    ("u-tile-1", transformCode utile1) 
+    ("u-tile-2", transformCode utile2) 
+    ("u-tile-3", transformCode utile3) 
+    ("side-1", numberCombinatorCode sideNS) 
+    ("side-2", numberCombinatorCode sideEW) 
+    ("corner-1", numberCombinatorCode cornerNWSE) 
+    ("corner-2", numberCombinatorCode cornerNESW) 
+    ("square-limit", numberCombinatorCode squareLimit) 
+]
+
 let tryLookupFunction (name : string) : Function option =
-    match name with 
-    | "turn" -> 
-        Some { Name = "turn"; Code = transformCode turn } 
-    | "flip" -> 
-        Some { Name = "flip"; Code = transformCode flip } 
-    | "toss" -> 
-        Some { Name = "toss"; Code = transformCode toss } 
-    | "hue" -> 
-        Some { Name = "hue"; Code = transformCode rehue } 
-    | "above" -> 
-        Some { Name = "above"; Code = pairCombinatorCode above } 
-    | "beside" -> 
-        Some { Name = "beside"; Code = pairCombinatorCode beside } 
-    | "over" -> 
-        Some { Name = "over"; Code = pairCombinatorCode over } 
-    | "above-ratio" -> 
-        Some { Name = "above-ratio"; Code = weightedPairCombinatorCode aboveRatio } 
-    | "beside-ratio" -> 
-        Some { Name = "beside-ratio"; Code = weightedPairCombinatorCode besideRatio } 
-    | "quartet" -> 
-        Some { Name = "quartet"; Code = quartetCombinatorCode quartet } 
-    | "nonet" -> 
-        Some { Name = "nonet"; Code = nonetCombinatorCode nonet } 
-    | "t-tile-1" -> 
-        Some { Name = "t-tile-1"; Code = transformCode ttile1 } 
-    | "t-tile-2" -> 
-        Some { Name = "t-tile-2"; Code = transformCode ttile2 } 
-    | "u-tile-1" -> 
-        Some { Name = "u-tile-1"; Code = transformCode utile1 } 
-    | "u-tile-2" -> 
-        Some { Name = "u-tile-2"; Code = transformCode utile2 } 
-    | "u-tile-3" -> 
-        Some { Name = "u-tile-3"; Code = transformCode utile3 } 
-    | "side-1" -> 
-        Some { Name = "side-1"; Code = numberCombinatorCode sideNS } 
-    | "side-2" -> 
-        Some { Name = "side-2"; Code = numberCombinatorCode sideEW } 
-    | "corner-1" -> 
-        Some { Name = "corner-1"; Code = numberCombinatorCode cornerNWSE } 
-    | "corner-2" -> 
-        Some { Name = "corner-2"; Code = numberCombinatorCode cornerNESW } 
-    | "square-limit" -> 
-        Some { Name = "square-limit"; Code = numberCombinatorCode squareLimit } 
+    match functionDictionary.TryGetValue(name) with 
+    | (true, code) -> Some { Name = name; Code = code }
     | _ -> None
 
 let tryParseFunctionValue (s : string) : StackValue option =
@@ -219,28 +232,101 @@ let rec tryFindFirstPicture (stack : Stack) : Picture option =
     | PictureValue p :: t -> Some p 
     | _ :: t -> tryFindFirstPicture t
 
-let fooStuff values = 
+let toSvg (picture : Picture) : XmlNode =
+    let box = { a = { x = 100.; y = 100. }
+                b = { x = 200.; y = 0. }
+                c = { x = 0.; y = 200. } }
+    let lens = (box, Blackish)
+    view ((400, 400), Grey, picture lens)
+
+let handleRequest stackStrings = 
+    let values = stackStrings |> List.map parseStackValue
+    let stackString = toStackString stackStrings
+    let popStackString = stackStrings |> tailless |> toStackString
     let stk = runProgram [] values
     let maybePicture = tryFindFirstPicture stk 
-    let bounds = (500, 500)
-    let background = Grey
-    match maybePicture with 
-    | Some picture -> 
-        let box = { a = { x = 50.; y = 50. }
-                    b = { x = 400.; y = 0. }
-                    c = { x = 0.; y = 400. } }
-        let lens = (box, Blackish)
-        let shapes = picture lens
-        let v = view (bounds, background, shapes)
-        let result = renderHtmlDocument v
-        htmlString result
-    | None -> htmlString "Nothing here."
+    let pictureNode = 
+        maybePicture
+        |> Option.map toSvg 
+        |> Option.defaultValue (div [] []) 
+
+    let createLink name = 
+        if stackString = "" then 
+            sprintf "/escher/%s" name
+        else 
+            sprintf "/escher/%s/%s" stackString name
+
+    let pictureNames = pictureShapesDictionary |> Seq.map (fun kvp -> kvp.Key) |> Seq.toList
+    let pictureLinks = pictureNames |> List.map (fun n -> a [ attr "href" (createLink n) ] [ str n ] )
+    let formActionTarget = [ "escher"; stackString ] |> concatStrings "/" |> sprintf "/%s"
+    let picturesDiv = div [] [ 
+        h3 [] [ str "Pictures" ] 
+        div [] [
+            ul [] (List.map (fun link -> li [] [link]) pictureLinks)
+        ] 
+        hr []
+        h3 [] [ str "Input" ]
+
+        form [ attr "action" formActionTarget; attr "method" "POST" ] [
+            label [ attr "for" "number" ] [ str "Number" ]
+            input [ attr "type" "text"; attr "id" "number"; attr "name" "number" ]
+            input [ attr "type" "submit"; attr "value" "push" ]
+        ]
+    ] 
+ 
+    let withPopLink (links : XmlNode list) : XmlNode list =
+        match stackString with 
+        | "" -> links
+        | _ -> 
+            let popHref = 
+                if popStackString = "" then "/escher"
+                else sprintf "/escher/%s" popStackString
+            let popLink = a [ attr "href" popHref ] [ str "pop" ] 
+            popLink :: links
+
+    let withClearLink (links : XmlNode list) : XmlNode list =
+        let clearLink = a [ attr "href" "/escher" ] [ str "clear" ] 
+        clearLink :: links
+
+    let operationNames = functionDictionary |> Seq.map (fun kvp -> kvp.Key) |> Seq.toList
+    let operationLinks = operationNames |> List.map (fun n -> a [ attr "href" (createLink n) ] [ str n ] )
+    let allOperationLinks = 
+        operationLinks |> withPopLink |> withClearLink
+    let operationsDiv = div [] [ 
+        h3 [] [ str "Operations" ] 
+        div [] [
+            ul [] (List.map (fun link -> li [] [link]) allOperationLinks)
+        ] 
+    ] 
+    
+    let doc = 
+        html [] [
+            head [] [
+                title [] [ str "Hyperfish: Hypermedia-driven functional geometry"]
+            ]
+            body [] [
+                table [ attr "valign" "top" ] [
+                    tr [ attr "valign" "top" ] [
+                        td [ attr "width" "400" ] [
+                            pictureNode
+                        ]
+                        td [ attr "width" "150" ] [
+                            picturesDiv
+                        ]
+                        td [ attr "width" "150" ] [
+                            operationsDiv
+                        ]
+                    ]
+                ]
+            ]
+        ]
+    let result = renderHtmlDocument doc
+    htmlString result
 
 let render (s : string) : HttpHandler = 
     let strs = s.Split("/") |> List.ofArray |> List.tail
     try 
-        let values = strs |> List.map parseStackValue
-        fooStuff values
+        handleRequest strs
     with 
     | StackUnderflowException -> htmlString "Stack underflow exception!"
     | TypeException msg -> htmlString msg
@@ -251,3 +337,17 @@ let escherHandler (matches : string seq) : HttpHandler =
         match matches |> Seq.tail |> Seq.tryExactlyOne with 
         | Some thing -> (render thing) next ctx
         | None -> (text "nothing" next ctx)
+
+let escherPostHandler (matches : string seq) : HttpHandler =
+    fun (next : HttpFunc) (ctx : HttpContext) ->
+        match ctx.Request.HasFormContentType with
+        | false -> text "Bad request - where is the form?" next ctx
+        | true ->
+            printfn "FORM!!! %A" ctx.Request.Form
+            match ctx.Request.Form.TryGetValue("number") with 
+            | (true, formStringValues) ->
+                let numberStr = formStringValues.[0]
+                let location = sprintf "%s/%s" (matches |> Seq.head) numberStr
+                (redirectTo false location) next ctx
+            | _ ->
+                text "Bad request - where is the number?" next ctx

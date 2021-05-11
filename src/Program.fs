@@ -11,10 +11,13 @@ module Program =
 
     let configureApp (webHostContext: WebHostBuilderContext) (app: IApplicationBuilder) =
         let webApp =
-            GET >=> choose [
-                    route "/ping" >=> text "pong"
-                    route "/fish" >=> text "fish"
-                    routexp "/escher(/.*)" escherHandler
+            choose [
+                GET >=> choose [
+                        route "/ping" >=> text "pong"
+                        route "/fish" >=> text "fish"
+                        routexp "/escher(/.*)?" escherHandler
+                ]
+                POST >=> routexp "/escher(/.*)?" escherPostHandler
             ]
         app.UseGiraffe webApp
 
