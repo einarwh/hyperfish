@@ -1,4 +1,4 @@
-# hyperfish
+# Hyperfish
 
 A web application that combines three ideas:
 * Peter Henderson's Functional Geometry: an implentation of the picture combinators in Henderson's paper.
