@@ -3,21 +3,22 @@ module Fish
 open Vector
 open Shape
 
-let createVector x y = 
+let createVector x y : Vector = 
   { x = x; y = y }
 
-let createCurve v1 v2 v3 v4 = 
+let createCurve v1 v2 v3 v4 : CurveShape = 
   { point1 = v1; point2 = v2; point3 = v3; point4 = v4 }
 
-let createBezier (x1, y1) (x2, y2) (x3, y3) = 
+let createBezier (x1, y1) (x2, y2) (x3, y3) : PathSegment = 
   { controlPoint1 = { x = x1; y = y1 }
     controlPoint2 = { x = x2; y = y2 } 
-    endPoint =      { x = x3; y = y3 } }
+    endPoint =      { x = x3; y = y3 } } |> BezierSegment
+
+let createLine (x, y) : PathSegment = 
+  { targetPoint = { x = x; y = y } } |> LineSegment
 
 let fishyBeziers = [
-  createBezier (0.110, 0.110) 
-               (0.175, 0.175) 
-               (0.250, 0.250)
+  createLine   (0.250, 0.250)
   createBezier (0.372, 0.194) 
                (0.452, 0.132) 
                (0.564, 0.032)
@@ -30,12 +31,7 @@ let fishyBeziers = [
   createBezier (0.660, 0.208)
                (0.589, 0.217)
                (0.500, 0.250)
-  createBezier (0.500, 0.410)
-               (0.500, 0.460)
-               (0.500, 0.500)
-  createBezier (0.500, 0.575)
-               (0.500, 0.625)
-               (0.500, 0.750)
+  createLine   (0.500, 0.750)
   createBezier (0.411, 0.783)
                (0.340, 0.792)
                (0.234, 0.798)
@@ -48,14 +44,12 @@ let fishyBeziers = [
   createBezier (-0.132, 0.452)
                (-0.194, 0.372)
                (-0.250, 0.250)
-  createBezier (-0.150, 0.150)
-               (-0.050, 0.050)
-               (0.000, 0.000)
+  createLine   (0.000, 0.000)
 ]
 
 let fishyPath = Path ({ x = 0.000; y = 0.000}, fishyBeziers) 
 
-let fishyLeftEyeBeziers = [
+let fishyLeftEyeBeziers : PathSegment list = [
   createBezier (0.040, 0.772)
                (0.068, 0.696)
                (0.074, 0.685)

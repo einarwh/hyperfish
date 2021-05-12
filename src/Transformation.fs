@@ -42,13 +42,21 @@ let getStyle box =
                     strokeColor = StyleColor.Black } 
     fill = None }
 
-let mapBezier m = function 
+let mapBezierSegment m = function 
 | { controlPoint1 = cp1
     controlPoint2 = cp2
     endPoint = ep } ->
   { controlPoint1 = m cp1
     controlPoint2 = m cp2
     endPoint = m ep }
+
+let mapLineSegment m = function 
+| { targetPoint = tp } ->
+  { targetPoint = m tp }
+
+let mapPathSegment m = function 
+| BezierSegment bs -> BezierSegment (mapBezierSegment m bs) 
+| LineSegment ls -> LineSegment (mapLineSegment m ls)
 
 let isInnerEye name = 
   name = "eye-inner" || name = "egg-eye-inner"
@@ -116,7 +124,7 @@ let mapNamedShape (box : Box, hue : Hue) (name, shape) : (Shape * Style) =
             point4 = m v4 }, getDefaultStyle name hue sw
   | Path (start, beziers) ->
     let style = getPathStyle name sw hue
-    Path (m start, beziers |> List.map (mapBezier m)), style
+    Path (m start, beziers |> List.map (mapPathSegment m)), style
   | Line { lineStart = v1
            lineEnd = v2 } ->
     Line { lineStart = m v1 
@@ -148,8 +156,8 @@ let mirrorShape mirror = function
               point2 = mirror v2 
               point3 = mirror v3 
               point4 = mirror v4 }
-    | Path (start, beziers) ->        
-      Path (mirror start, beziers |> List.map (mapBezier mirror))
+    | Path (start, pathSegments) ->        
+      Path (mirror start, pathSegments |> List.map (mapPathSegment mirror))
 
 let getStrokeWidthFromStyle = function 
   | Some strokeStyle ->
@@ -250,15 +258,28 @@ let curve (style : Style) (curveShape : CurveShape) : XmlNode =
           _d d ]
     tag "path" attrs []
 
-let path (style : Style) (pathShape : Vector * BezierShape list) : XmlNode = 
+let path (style : Style) (pathShape : Vector * PathSegment list) : XmlNode = 
   match pathShape with 
-  | ({ x = x; y = y }, beziers) -> 
+  | ({ x = x; y = y }, pathSegments) -> 
+    let nextBezierSegment 
+      { controlPoint1 = { x = x1; y = y1 }
+        controlPoint2 = { x = x2; y = y2 }
+        endPoint      = { x = x3; y = y3 } } =
+      sprintf "C %f %f, %f %f, %f %f" x1 y1 x2 y2 x3 y3 
+    // "L " ++ (toStr targetPoint)
+    let nextLineSegment 
+      { targetPoint = {x = x; y = y } } =
+      sprintf "L %f %f" x y
+    let nextPathSegment segment = 
+      match segment with 
+      | BezierSegment bs -> nextBezierSegment bs
+      | LineSegment ls -> nextLineSegment ls
     let nextShape { controlPoint1 = { x = x1; y = y1 }
                     controlPoint2 = { x = x2; y = y2 }
                     endPoint      = { x = x3; y = y3 } } =
       sprintf "C %f %f, %f %f, %f %f" x1 y1 x2 y2 x3 y3 
     let startStr = sprintf "M%f %f" x y
-    let nextStrs = beziers |> List.map nextShape 
+    let nextStrs = pathSegments |> List.map nextPathSegment 
     let strs = nextStrs @ [ "Z" ]
     let d = startStr :: strs |> String.concat " "
     let strokeWidth = getStrokeWidthFromStyle style.stroke
