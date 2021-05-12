@@ -47,7 +47,12 @@ let fishyBeziers = [
   createLine   (0.000, 0.000)
 ]
 
-let fishyPath = Path ({ x = 0.000; y = 0.000}, fishyBeziers) 
+let fishyPath = 
+  let pathShape = 
+    { start = { x = 0.000; y = 0.000 }
+      close = true 
+      segments = fishyBeziers }
+  Path pathShape
 
 let fishyLeftEyeBeziers : PathSegment list = [
   createBezier (0.040, 0.772)
@@ -63,7 +68,12 @@ let fishyLeftEyeBeziers : PathSegment list = [
                (0.004, 0.800)
 ]
 
-let leftEyePath = Path ({ x = 0.004; y = 0.800 }, fishyLeftEyeBeziers) 
+let leftEyePath = 
+  let pathShape = 
+    { start = { x = 0.004; y = 0.800 }
+      close = true 
+      segments = fishyLeftEyeBeziers }
+  Path pathShape
 
 let fishyInnerLeftEyeBeziers = [
   createBezier (0.038, 0.708)
@@ -79,7 +89,12 @@ let fishyInnerLeftEyeBeziers = [
                (0.018, 0.720)
 ]
 
-let innerLeftEyePath = Path ({ x = 0.018; y = 0.720}, fishyInnerLeftEyeBeziers) 
+let innerLeftEyePath = 
+  let pathShape = 
+    { start = { x = 0.018; y = 0.720 }
+      close = true 
+      segments = fishyInnerLeftEyeBeziers }
+  Path pathShape
 
 let fishyRightEyeBeziers = [
   createBezier (0.160, 0.840)
@@ -95,7 +110,12 @@ let fishyRightEyeBeziers = [
                (0.095, 0.870)
 ]
 
-let rightEyePath = Path ({ x = 0.095; y = 0.870}, fishyRightEyeBeziers) 
+let rightEyePath =
+  let pathShape = 
+    { start = { x = 0.095; y = 0.870 }
+      close = true 
+      segments = fishyRightEyeBeziers }
+  Path pathShape
 
 let fishyInnerRightEyeBeziers = [
   createBezier (0.150, 0.805)
@@ -111,7 +131,12 @@ let fishyInnerRightEyeBeziers = [
                (0.128, 0.810)
 ]
 
-let innerRightEyePath = Path ({ x = 0.128; y = 0.810 }, fishyInnerRightEyeBeziers) 
+let innerRightEyePath = 
+  let pathShape = 
+    { start = { x = 0.128; y = 0.810 }
+      close = true 
+      segments = fishyInnerRightEyeBeziers }
+  Path pathShape
 
 let fishySpineCurves = [
   (* main spine *)

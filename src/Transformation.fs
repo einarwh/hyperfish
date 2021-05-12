@@ -16,19 +16,16 @@ let mapper ({ a = a; b = b; c = c } : Box)
            { x = x; y = y } =
    a + b * x + c * y
 
-
 let size { x = x; y = y } = 
   sqrt(x * x + y * y)
 
 let getStrokeWidth { a = _; b = b; c = c } =
   let s = min (size b) (size c)
   s / 80.
-                         
-let getStyle box = 
-  let sw = getStrokeWidth box
-  { stroke = Some { strokeWidth = sw
-                    strokeColor = StyleColor.Black } 
-    fill = None }
+
+let getRadiusScale { a = _; b = b; c = c } =
+  let s = min (size b) (size c)
+  s / 20.
 
 let mapBezierSegment m = function 
 | { controlPoint1 = cp1
@@ -73,10 +70,22 @@ let getEyeLiner sw hue =
   { strokeColor = getColor "secondary" hue 
     strokeWidth = sw }
     
-let getPathStyle name sw hue = 
-  let stroke = if isOuterEye name then Some <| getEyeLiner sw hue else None
-  let fill = Some { fillColor = getColor name hue }
-  { stroke = stroke; fill = fill }
+let getClosedPathStyle name sw hue = 
+   let stroke = if isOuterEye name then Some <| getEyeLiner sw hue else None
+   let fill = Some { fillColor = getColor name hue }
+   { stroke = stroke; fill = fill }
+
+let getOpenPathStyle name sw hue = 
+  let stroke = 
+    { strokeColor = getColor name hue 
+      strokeWidth = sw }
+  { stroke = Some stroke; fill = None }    
+
+let getPathStyle close name sw hue = 
+  if close then 
+    getClosedPathStyle name sw hue 
+  else 
+    getOpenPathStyle name sw hue 
 
 let getDefaultColor name hue = 
   if name = "secondary" then 
@@ -99,6 +108,7 @@ let getDefaultStyle name hue sw =
 let mapNamedShape (box : Box, hue : Hue) (name, shape) : (Shape * Style) = 
   let m = mapper box
   let sw = getStrokeWidth box
+  let rs = getRadiusScale box 
   match shape with
   | Polygon { points = pts } ->
     Polygon { points = pts |> List.map m }, getDefaultStyle name hue sw
@@ -110,15 +120,15 @@ let mapNamedShape (box : Box, hue : Hue) (name, shape) : (Shape * Style) =
             point2 = m v2 
             point3 = m v3 
             point4 = m v4 }, getDefaultStyle name hue sw
-  | Path (start, beziers) ->
-    let style = getPathStyle name sw hue
-    Path (m start, beziers |> List.map (mapPathSegment m)), style
+  | Path { start = start; close = close; segments = beziers } ->
+    let style = getPathStyle close name sw hue
+    Path { start = m start; close = close; segments = beziers |> List.map (mapPathSegment m) }, style
   | Line { lineStart = v1
            lineEnd = v2 } ->
     Line { lineStart = m v1 
            lineEnd = m v2 }, getDefaultStyle name hue sw
   | Circle { center = c; radius = r } ->
-    Circle { center = m c; radius = r } , getDefaultStyle name hue sw
+    Circle { center = m c; radius = rs * r } , getDefaultStyle name hue sw
   | Polyline { pts = pts } ->
     Polyline { pts = pts |> List.map m }, getDefaultStyle name hue sw
 
@@ -148,8 +158,8 @@ let mirrorShape mirror = function
               point2 = mirror v2 
               point3 = mirror v3 
               point4 = mirror v4 }
-    | Path (start, pathSegments) ->        
-      Path (mirror start, pathSegments |> List.map (mapPathSegment mirror))
+    | Path { start = start; close = close; segments = pathSegments } ->        
+      Path { start = mirror start; close = close; segments = pathSegments |> List.map (mapPathSegment mirror) }
 
 let getStrokeWidthFromStyle = function 
   | Some strokeStyle ->
@@ -204,16 +214,27 @@ let line (lineShape : LineShape) : XmlNode =
       _stroke "green" ]
   tag "line" attrs []
 
-let circle (circleShape : CircleShape) : XmlNode = 
+let circle (style : Style) (circleShape : CircleShape) : XmlNode = 
   match circleShape with 
   | { center = { x = x; y = y } 
       radius = r } -> 
   let pt n v = v |> sprintf "%f" |> attr n
+  let strokeWidth = getStrokeWidthFromStyle style.stroke
+  let (strokeColor, sw) = 
+    match style.stroke with 
+    | Some stroke -> getStrokePen stroke
+    | None -> ("none", strokeWidth)
+  let fillColor = 
+    match style.fill with 
+    | Some fill -> getFillBrush fill
+    | None -> "none"
   let attrs = 
     [ pt "cx" x 
       pt "cy" y
       pt "r" r 
-      _stroke "green" ]
+      _strokeWidth (sprintf "%f" strokeWidth)
+      _stroke strokeColor
+      _fill fillColor ]
   tag "circle" attrs []
 
 let polygon (polygonShape : PolygonShape) : XmlNode = 
@@ -262,15 +283,14 @@ let curve (style : Style) (curveShape : CurveShape) : XmlNode =
           _d d ]
     tag "path" attrs []
 
-let path (style : Style) (pathShape : Vector * PathSegment list) : XmlNode = 
+let path (style : Style) (pathShape : PathShape) : XmlNode = 
   match pathShape with 
-  | ({ x = x; y = y }, pathSegments) -> 
+  | { start = { x = x; y = y }; close = close; segments = pathSegments } -> 
     let nextBezierSegment 
       { controlPoint1 = { x = x1; y = y1 }
         controlPoint2 = { x = x2; y = y2 }
         endPoint      = { x = x3; y = y3 } } =
       sprintf "C %f %f, %f %f, %f %f" x1 y1 x2 y2 x3 y3 
-    // "L " ++ (toStr targetPoint)
     let nextLineSegment 
       { targetPoint = {x = x; y = y } } =
       sprintf "L %f %f" x y
@@ -284,11 +304,9 @@ let path (style : Style) (pathShape : Vector * PathSegment list) : XmlNode =
       sprintf "C %f %f, %f %f, %f %f" x1 y1 x2 y2 x3 y3 
     let startStr = sprintf "M%f %f" x y
     let nextStrs = pathSegments |> List.map nextPathSegment 
-    let strs = nextStrs @ [ "Z" ]
+    let strs = if close then nextStrs @ [ "Z" ] else nextStrs
     let d = startStr :: strs |> String.concat " "
     let strokeWidth = getStrokeWidthFromStyle style.stroke
-    //let strokeColor = getStrokeColorFromStyle style.stroke
-    //let colorName = getStrokeColorName strokeColor
     let (strokeColor, sw) = 
       match style.stroke with 
       | Some stroke -> getStrokePen stroke
@@ -309,15 +327,15 @@ let toSvgElement (style : Style) = function
     | Line lineShape ->
       line lineShape
     | Circle circleShape ->
-      circle circleShape
+      circle style circleShape
     | Polyline polylineShape ->
       polyline polylineShape
     | Polygon polygonShape ->
       polygon polygonShape
     | Curve curveShape ->
       curve style curveShape
-    | Path (vector, beziers) ->
-      path style (vector, beziers)
+    | Path pathShape ->
+      path style pathShape 
 
 let getBackgroundColor = function 
   | Grey -> "#CCCCCC"

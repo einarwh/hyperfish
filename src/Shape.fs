@@ -34,10 +34,15 @@ type LineShape =
   { lineStart : Vector 
     lineEnd : Vector}
 
+type PathShape = 
+  { start : Vector 
+    close : bool 
+    segments : PathSegment list }
+
 type Shape =
   | Line of LineShape
   | Circle of CircleShape
   | Polygon of PolygonShape
   | Polyline of PolylineShape
   | Curve of CurveShape
-  | Path of Vector * PathSegment list
+  | Path of PathShape

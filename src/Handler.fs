@@ -30,7 +30,7 @@ let pictureShapesDictionary = dict [
     "r-letter", rLetter
     "s-letter", sLetter
     "o-letter", oLetter
-    // "lizard", lizard
+    "lizard", lizard
     "blank", []
 ]
 
