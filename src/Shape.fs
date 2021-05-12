@@ -14,6 +14,10 @@ type CurveShape =
     point3 : Vector
     point4 : Vector }
 
+type CircleShape = 
+  { center : Vector 
+    radius : float }
+
 type BezierSegment = 
   { controlPoint1 : Vector
     controlPoint2 : Vector
@@ -23,17 +27,17 @@ type LineSegment =
   { targetPoint : Vector}
 
 type PathSegment = 
-  | BezierSegment of BezierSegment
   | LineSegment of LineSegment
+  | BezierSegment of BezierSegment
 
 type LineShape = 
   { lineStart : Vector 
     lineEnd : Vector}
 
 type Shape =
+  | Line of LineShape
+  | Circle of CircleShape
   | Polygon of PolygonShape
   | Polyline of PolylineShape
   | Curve of CurveShape
   | Path of Vector * PathSegment list
-  | Line of LineShape
-

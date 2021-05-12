@@ -9,6 +9,7 @@ open Transformation
 open Picture
 open Styling
 open Fish
+open Lizard
 open Letters
 open Figures
 open Stack
@@ -19,7 +20,6 @@ let concatStrings (s : string) (strings : string seq) =
     System.String.Join(s, strings)
 
 let pictureShapesDictionary = dict [
-    "blank", []
     "fish", fishShapes 
     "george", georgeShapes
     "f-letter", fLetter
@@ -30,6 +30,8 @@ let pictureShapesDictionary = dict [
     "r-letter", rLetter
     "s-letter", sLetter
     "o-letter", oLetter
+    // "lizard", lizard
+    "blank", []
 ]
 
 let tailless list = 

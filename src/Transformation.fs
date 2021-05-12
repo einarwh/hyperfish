@@ -16,18 +16,6 @@ let mapper ({ a = a; b = b; c = c } : Box)
            { x = x; y = y } =
    a + b * x + c * y
 
-let mapShape m = function 
-  | Polygon { points = pts } ->
-    Polygon { points = pts |> List.map m }
-  | Curve { point1 = v1
-            point2 = v2 
-            point3 = v3 
-            point4 = v4 } ->
-    Curve { point1 = m v1
-            point2 = m v2 
-            point3 = m v3 
-            point4 = m v4 }
-  | x -> x
 
 let size { x = x; y = y } = 
   sqrt(x * x + y * y)
@@ -129,6 +117,8 @@ let mapNamedShape (box : Box, hue : Hue) (name, shape) : (Shape * Style) =
            lineEnd = v2 } ->
     Line { lineStart = m v1 
            lineEnd = m v2 }, getDefaultStyle name hue sw
+  | Circle { center = c; radius = r } ->
+    Circle { center = m c; radius = r } , getDefaultStyle name hue sw
   | Polyline { pts = pts } ->
     Polyline { pts = pts |> List.map m }, getDefaultStyle name hue sw
 
@@ -144,6 +134,8 @@ let mirrorShape mirror = function
              lineEnd = lineEnd } ->
       Line { lineStart = mirror lineStart 
              lineEnd = mirror lineEnd }
+    | Circle { center = c; radius = r } ->
+      Circle { center = mirror c; radius = r }
     | Polyline { pts = pts } ->
       Polyline { pts = pts |> List.map mirror }
     | Polygon { points = pts } ->
@@ -211,6 +203,18 @@ let line (lineShape : LineShape) : XmlNode =
       pt "y2" y2 
       _stroke "green" ]
   tag "line" attrs []
+
+let circle (circleShape : CircleShape) : XmlNode = 
+  match circleShape with 
+  | { center = { x = x; y = y } 
+      radius = r } -> 
+  let pt n v = v |> sprintf "%f" |> attr n
+  let attrs = 
+    [ pt "cx" x 
+      pt "cy" y
+      pt "r" r 
+      _stroke "green" ]
+  tag "circle" attrs []
 
 let polygon (polygonShape : PolygonShape) : XmlNode = 
   match polygonShape with 
@@ -304,6 +308,8 @@ let path (style : Style) (pathShape : Vector * PathSegment list) : XmlNode =
 let toSvgElement (style : Style) = function 
     | Line lineShape ->
       line lineShape
+    | Circle circleShape ->
+      circle circleShape
     | Polyline polylineShape ->
       polyline polylineShape
     | Polygon polygonShape ->
