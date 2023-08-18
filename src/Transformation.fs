@@ -6,7 +6,7 @@ open Styling
 open Box
 open Lens
 open Picture
-open Giraffe.GiraffeViewEngine
+open Giraffe.ViewEngine
 
 type Bounds = (int * int)
 

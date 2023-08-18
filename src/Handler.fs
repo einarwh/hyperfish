@@ -2,7 +2,7 @@ module Handler
 
 open Microsoft.AspNetCore.Http
 open Giraffe
-open Giraffe.GiraffeViewEngine
+open Giraffe.ViewEngine
 open Box
 open Lens
 open Transformation
@@ -368,7 +368,7 @@ let handleRequest stackStrings =
                 ]
             ]
         ]
-    let result = renderHtmlDocument doc
+    let result = RenderView.AsString.htmlDocument doc
     htmlString result
 
 let render (s : string) : HttpHandler = 
