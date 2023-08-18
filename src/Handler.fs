@@ -411,7 +411,12 @@ let escherPostHandler (matches : string seq) : HttpHandler =
             match ctx.Request.Form.TryGetValue("number") with 
             | (true, formStringValues) ->
                 let numberStr = formStringValues.[0]
-                let location = sprintf "%s/%s" (matches |> Seq.head) numberStr
+                let h = matches |> Seq.head 
+                let location = 
+                    if h.EndsWith("/") then 
+                        sprintf "%s%s" h numberStr
+                    else 
+                        sprintf "%s/%s" h numberStr
                 (redirectTo false location) next ctx
             | _ ->
                 text "Bad request - where is the number?" next ctx
