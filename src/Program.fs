@@ -18,6 +18,7 @@ module Program =
                         routexp "/escher(/.*)?" escherHandler
                 ]
                 POST >=> routexp "/escher(/.*)?" escherPostHandler
+                redirectTo true "/escher"
             ]
         app.UseGiraffe webApp
 
