@@ -98,7 +98,7 @@ let side tt hueSW hueSE n fish =
   let rec recur n = 
     let r = if n = 1 then blank else recur (n - 1)
     quartet r r (t |> turn |> hueSW) (t |> hueSE)
-  recur n
+  if n < 1 then blank else recur n
 
 let sideNS = side ttile1 id rehue
 
@@ -111,7 +111,7 @@ let corner ut side1 side2 n fish =
       if n = 1 then blank, blank, blank 
                else fn (n - 1), side1 (n - 1) fish, side2 (n - 1) fish
     quartet c ne (sw |> turn) u
-  fn n
+  if n < 1 then blank else fn n
 
 let cornerNWSE = corner utile3 sideNS sideEW
 let cornerNESW = corner utile2 sideEW sideNS
