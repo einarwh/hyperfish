@@ -71,7 +71,12 @@ let getEyeLiner sw hue =
     strokeWidth = sw }
     
 let getClosedPathStyle name sw hue = 
-   let stroke = if isOuterEye name then Some <| getEyeLiner sw hue else None
+   let stroke = 
+    if isOuterEye name then Some <| getEyeLiner sw hue 
+    else 
+      match hue with 
+      | Whiteish -> Some { strokeColor = StyleColor.Grey; strokeWidth = 1 }
+      | _ -> None 
    let fill = Some { fillColor = getColor name hue }
    { stroke = stroke; fill = fill }
 

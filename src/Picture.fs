@@ -130,3 +130,22 @@ let squareLimit n fish =
         sideW center sideE
         cornerSW sideS cornerSE
         
+let rec tunnelCorner n fish = 
+  if n < 1 then
+    blank 
+  else  
+    let nw = over fish (fish |> rehue |> turn |> turn)
+    // let tossed = fish |> toss |> flip 
+    let fishN = fish |> toss |> flip
+    let fishE = fishN |> turn |> turn |> turn
+    let ne = (fish |> rehue |> rehue) |> over (fishN |> rehue) |> over fishE |> turn |> turn |> turn
+    let sw = ne
+    let se = tunnelCorner (n - 1) fish
+    quartet nw ne sw se  
+
+let tunnel n fish = 
+  let nw = tunnelCorner n fish 
+  let sw = nw |> turn 
+  let se = sw |> turn 
+  let ne = se |> turn 
+  quartet nw ne sw se 

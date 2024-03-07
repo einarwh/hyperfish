@@ -240,6 +240,8 @@ let functionDictionary : System.Collections.Generic.IDictionary<string, Function
     ("corner-1", numberCombinatorFunction "corner-1" cornerNWSE) 
     ("corner-2", numberCombinatorFunction "corner-2" cornerNESW) 
     ("square-limit", numberCombinatorFunction "square-limit" squareLimit) 
+    ("tunnel-corner", numberCombinatorFunction "tunnel-corner" tunnelCorner) 
+    ("tunnel", numberCombinatorFunction "tunnel" tunnel) 
 ]
 
 let tryLookupFunction (name : string) : Function option =
