@@ -99,11 +99,20 @@ let getDefaultColor name hue =
     | Greyish -> StyleColor.Grey
     | Whiteish -> StyleColor.White
 
+let getDefaultFill name hue = 
+  if name = "filled" then 
+    match hue with 
+    | Blackish -> Some { fillColor = StyleColor.Black }
+    | Greyish ->  Some { fillColor = StyleColor.Grey  }
+    | Whiteish -> Some { fillColor = StyleColor.White } 
+  else
+    None
+
 let getDefaultStyle name hue sw = 
   let stroke = 
     { strokeWidth = sw 
       strokeColor = getDefaultColor name hue }
-  { stroke = Some stroke; fill = None }
+  { stroke = Some stroke; fill = getDefaultFill name hue }
 
 let mapNamedShape (box : Box, hue : Hue) (name, shape) : (Shape * Style) = 
   let m = mapper box
@@ -237,14 +246,23 @@ let circle (style : Style) (circleShape : CircleShape) : XmlNode =
       _fill fillColor ]
   tag "circle" attrs []
 
-let polygon (polygonShape : PolygonShape) : XmlNode = 
+let polygon (style : Style) (polygonShape : PolygonShape) : XmlNode = 
   match polygonShape with 
   | { points = pts } -> 
+    let strokeWidth = getStrokeWidthFromStyle style.stroke
+    let (strokeColor, sw) = 
+      match style.stroke with 
+      | Some stroke -> getStrokePen stroke
+      | None -> ("none", strokeWidth)
+    let fillColor = 
+      match style.fill with 
+      | Some fill -> getFillBrush fill
+      | None -> "none"
     let pt { x = x; y = y } = sprintf "%f,%f" x y
     let s = pts |> List.map pt |> List.fold (fun acc it -> if acc = "" then it else acc + " " + it) ""
     let attrs = 
-      [ _blackstroke
-        _nonefill
+      [ _stroke strokeColor
+        _fill fillColor
         attr "points" s ]
     tag "polygon" attrs [] 
 
@@ -331,7 +349,7 @@ let toSvgElement (style : Style) = function
     | Polyline polylineShape ->
       polyline polylineShape
     | Polygon polygonShape ->
-      polygon polygonShape
+      polygon style polygonShape
     | Curve curveShape ->
       curve style curveShape
     | Path pathShape ->

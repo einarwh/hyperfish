@@ -22,6 +22,7 @@ let concatStrings (s : string) (strings : string seq) =
 let pictureShapesDictionary = dict [
     "fish", fishShapes 
     "george", georgeShapes
+    "byteman", byteman
     "f-letter", fLetter
     "h-letter", hLetter
     "e-letter", eLetter
