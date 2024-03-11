@@ -22,7 +22,10 @@ jobs:
           dotnet-version: '8.x'
           include-prerelease: true
 
-      - name: Build with dotnet
+      - name: dotnet tool restore 
+        run: dotnet tool restore
+
+      - name: dotnet build
         run: dotnet build --configuration Release
 
       - name: dotnet publish
