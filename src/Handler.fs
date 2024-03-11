@@ -352,7 +352,7 @@ let handleRequest stackStrings =
     let doc = 
         html [] [
             head [] [
-                title [] [ str "Hyperfish: Hypermedia-driven functional geometry"]
+                title [] [ str "Hyperpix: Hypermedia-driven functional geometry"]
                 link [ attr "rel" "stylesheet"; attr "type" "text/css"; attr "href" "//fonts.googleapis.com/css?family=Open+Sans" ]
             ]
             body [ attr "style" "font-family:Open Sans" ] [
