@@ -277,6 +277,7 @@ let toSvg (picture : Picture) : XmlNode =
 
 let handleRequest stackStrings = 
     let values = stackStrings |> List.map parseStackValue
+    printfn "stackStrings = %A" stackStrings
     let stackString = toStackString stackStrings
     let popStackString = stackStrings |> tailless |> toStackString
     let stk = runProgram [] values
@@ -288,13 +289,13 @@ let handleRequest stackStrings =
 
     let createLink name = 
         if stackString = "" then 
-            sprintf "/escher/%s" name
+            sprintf "/%s" name
         else 
-            sprintf "/escher/%s/%s" stackString name
+            sprintf "/%s/%s" stackString name
 
     let pictureNames = pictureShapesDictionary |> Seq.map (fun kvp -> kvp.Key) |> Seq.toList
     let pictureLinks = pictureNames |> List.map (fun n -> a [ attr "style" "color:darkred"; attr "href" (createLink n) ] [ str n ] )
-    let formActionTarget = [ "escher"; stackString ] |> concatStrings "/" |> sprintf "/%s"
+    let formActionTarget = [ stackString ] |> concatStrings "/" |> sprintf "/%s"
     let picturesDiv = div [] [ 
         h3 [] [ str "Pictures" ] 
         div [] [
@@ -315,13 +316,13 @@ let handleRequest stackStrings =
         | "" -> links
         | _ -> 
             let popHref = 
-                if popStackString = "" then "/escher"
-                else sprintf "/escher/%s" popStackString
+                if popStackString = "" then "/"
+                else sprintf "/%s" popStackString
             let popLink = a [ attr "style" "color:darkred"; attr "href" popHref ] [ str "pop" ] 
             popLink :: links
 
     let withClearLink (links : XmlNode list) : XmlNode list =
-        let clearLink = a [ attr "style" "color:darkred"; attr "href" "/escher" ] [ str "clear" ] 
+        let clearLink = a [ attr "style" "color:darkred"; attr "href" "/" ] [ str "clear" ] 
         clearLink :: links
 
     let rec legalOperation (parameters : ParamType list) (stack : Stack): bool = 
@@ -375,7 +376,8 @@ let handleRequest stackStrings =
     htmlString result
 
 let render (s : string) : HttpHandler = 
-    let strs = s.Split("/") |> List.ofArray |> List.tail
+    printfn "render %A" s
+    let strs = s.Split("/") |> List.ofArray
     try 
         handleRequest strs
     with 
@@ -383,12 +385,11 @@ let render (s : string) : HttpHandler =
     | TypeException msg -> htmlString msg
     | ex -> htmlString ex.Message
 
-let handle (s : string) : HttpHandler = 
+let handle (values : string list) : HttpHandler = 
     fun (next : HttpFunc) (ctx : HttpContext) -> 
-
-        let strs = s.Split("/") |> List.ofArray |> List.tail
+        printfn "handle %A" values
         try 
-            (handleRequest strs) next ctx
+            (handleRequest values) next ctx
         with 
         | StackUnderflowException -> 
             ctx.SetStatusCode 400
@@ -400,26 +401,27 @@ let handle (s : string) : HttpHandler =
             ctx.SetStatusCode 500 
             (htmlString ex.Message) next ctx
 
-let escherHandler (matches : string seq) : HttpHandler =
+let getHandler : HttpHandler =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        match matches |> Seq.tail |> Seq.tryExactlyOne with 
-        | Some thing -> (handle thing) next ctx
-        | None -> (text "nothing" next ctx)
+        printfn "getHandler!"
+        let pathString = ctx.Request.Path.Value.Substring(1) 
+        printfn "getHandler - pathString = '%s'" pathString 
+        let pathElements = pathString.Split("/") |> Array.toList |> List.filter (fun s -> s.Length > 0)
+        handle pathElements next ctx
 
-let escherPostHandler (matches : string seq) : HttpHandler =
+let postHandler : HttpHandler =
     fun (next : HttpFunc) (ctx : HttpContext) ->
+        printfn "postHandler!"
+        let pathString = ctx.Request.Path.Value 
+        printfn "postHandler - pathString = '%s'" pathString 
         match ctx.Request.HasFormContentType with
         | false -> text "Bad request - where is the form?" next ctx
         | true ->
             match ctx.Request.Form.TryGetValue("number") with 
             | (true, formStringValues) ->
                 let numberStr = formStringValues.[0]
-                let h = matches |> Seq.head 
-                let location = 
-                    if h.EndsWith("/") then 
-                        sprintf "%s%s" h numberStr
-                    else 
-                        sprintf "%s/%s" h numberStr
+                let pathString = ctx.Request.Path.Value 
+                let location = sprintf "%s/%s" pathString numberStr
                 (redirectTo false location) next ctx
             | _ ->
                 text "Bad request - where is the number?" next ctx
