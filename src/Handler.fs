@@ -277,7 +277,6 @@ let toSvg (picture : Picture) : XmlNode =
 
 let handleRequest stackStrings = 
     let values = stackStrings |> List.map parseStackValue
-    printfn "stackStrings = %A" stackStrings
     let stackString = toStackString stackStrings
     let popStackString = stackStrings |> tailless |> toStackString
     let stk = runProgram [] values
@@ -375,21 +374,12 @@ let handleRequest stackStrings =
     let result = RenderView.AsString.htmlDocument doc
     htmlString result
 
-let render (s : string) : HttpHandler = 
-    printfn "render %A" s
-    let strs = s.Split("/") |> List.ofArray
-    try 
-        handleRequest strs
-    with 
-    | StackUnderflowException -> htmlString "Stack underflow exception!"
-    | TypeException msg -> htmlString msg
-    | ex -> htmlString ex.Message
-
-let handle (values : string list) : HttpHandler = 
-    fun (next : HttpFunc) (ctx : HttpContext) -> 
-        printfn "handle %A" values
+let getHandler : HttpHandler =
+    fun (next : HttpFunc) (ctx : HttpContext) ->
+        let pathString = ctx.Request.Path.Value.Substring(1) 
+        let pathElements = pathString.Split("/") |> Array.toList |> List.filter (fun s -> s.Length > 0)
         try 
-            (handleRequest values) next ctx
+            (handleRequest pathElements) next ctx
         with 
         | StackUnderflowException -> 
             ctx.SetStatusCode 400
@@ -401,19 +391,9 @@ let handle (values : string list) : HttpHandler =
             ctx.SetStatusCode 500 
             (htmlString ex.Message) next ctx
 
-let getHandler : HttpHandler =
-    fun (next : HttpFunc) (ctx : HttpContext) ->
-        printfn "getHandler!"
-        let pathString = ctx.Request.Path.Value.Substring(1) 
-        printfn "getHandler - pathString = '%s'" pathString 
-        let pathElements = pathString.Split("/") |> Array.toList |> List.filter (fun s -> s.Length > 0)
-        handle pathElements next ctx
-
 let postHandler : HttpHandler =
     fun (next : HttpFunc) (ctx : HttpContext) ->
-        printfn "postHandler!"
         let pathString = ctx.Request.Path.Value 
-        printfn "postHandler - pathString = '%s'" pathString 
         match ctx.Request.HasFormContentType with
         | false -> text "Bad request - where is the form?" next ctx
         | true ->
