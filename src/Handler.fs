@@ -353,6 +353,10 @@ let handleRequest stackStrings =
         html [] [
             head [] [
                 title [] [ str "Hyperpictures: Hypermedia-driven functional geometry"]
+                meta [ attr "name" "charset"; attr "content" "UTF-8" ]
+                meta [ attr "name" "description"; attr "content" "Hypermedia-driven functional geometry" ]
+                meta [ attr "name" "author"; attr "content" "Einar W. Høst" ]
+                meta [ attr "name" "viewport"; attr "content" "width=device-width, initial-scale=1.0" ]
                 link [ attr "rel" "stylesheet"; attr "type" "text/css"; attr "href" "//fonts.googleapis.com/css?family=Open+Sans" ]
             ]
             body [ attr "style" "font-family:Open Sans" ] [
