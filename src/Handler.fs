@@ -10,6 +10,7 @@ open Picture
 open Styling
 open Fish
 open Lizard
+open Herring
 open Letters
 open Figures
 open Stack
@@ -32,6 +33,7 @@ let pictureShapesDictionary = dict [
     "s-letter", sLetter
     "o-letter", oLetter
     "lizard", lizard
+    "herring", herring
     "blank", []
 ]
 

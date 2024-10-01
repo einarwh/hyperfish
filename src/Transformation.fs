@@ -49,21 +49,27 @@ let isInnerEye name =
 let isOuterEye name = 
   name = "eye-outer" || name = "egg-eye-outer"
 
+let isHerring name = 
+  name = "herring"
+
 let getColor name = function 
   | Blackish -> 
     if name = "primary" then StyleColor.Black  
     else if isOuterEye name then StyleColor.White 
     else if isInnerEye name then StyleColor.Black 
+    else if isHerring name then StyleColor.Black 
     else StyleColor.White 
   | Greyish -> 
     if name = "primary" then StyleColor.Grey 
     else if isOuterEye name then StyleColor.White 
     else if isInnerEye name then StyleColor.Grey 
+    else if isHerring name then StyleColor.Red 
     else StyleColor.White 
   | Whiteish -> 
     if name = "primary" then StyleColor.White  
     else if isOuterEye name then StyleColor.White  
     else if isInnerEye name then StyleColor.Black 
+    else if isHerring name then StyleColor.Red 
     else StyleColor.Black
 
 let getEyeLiner sw hue =  
@@ -71,14 +77,19 @@ let getEyeLiner sw hue =
     strokeWidth = sw }
     
 let getClosedPathStyle name sw hue = 
-   let stroke = 
+  let stroke = 
     if isOuterEye name then Some <| getEyeLiner sw hue 
     else 
       match hue with 
       | Whiteish -> Some { strokeColor = StyleColor.Grey; strokeWidth = 1 }
       | _ -> None 
-   let fill = Some { fillColor = getColor name hue }
-   { stroke = stroke; fill = fill }
+  if isHerring name then 
+    let herringStroke = Some { strokeColor = StyleColor.Grey; strokeWidth = 2 }
+    let herringFill = None 
+    { stroke = herringStroke; fill = herringFill }
+  else 
+    let fill = Some { fillColor = getColor name hue }
+    { stroke = stroke; fill = fill }
 
 let getOpenPathStyle name sw hue = 
   let stroke = 
@@ -114,10 +125,16 @@ let getDefaultFill name hue =
     None
 
 let getDefaultStyle name hue sw = 
-  let stroke = 
-    { strokeWidth = sw 
-      strokeColor = getDefaultColor name hue }
-  { stroke = Some stroke; fill = getDefaultFill name hue }
+  if isHerring name then 
+    let stroke = 
+      { strokeWidth = 2
+        strokeColor = StyleColor.Grey }
+    { stroke = Some stroke; fill = None }
+  else 
+    let stroke = 
+      { strokeWidth = sw 
+        strokeColor = getDefaultColor name hue }
+    { stroke = Some stroke; fill = getDefaultFill name hue }
 
 let mapNamedShape (box : Box, hue : Hue) (name, shape) : (Shape * Style) = 
   let m = mapper box
@@ -190,6 +207,7 @@ let getStrokeColorName = function
   | StyleColor.Black -> "black"
   | StyleColor.White -> "white"
   | StyleColor.Grey -> "grey"
+  | StyleColor.Red -> "red"
 
 let getStrokePen { strokeWidth = sw; strokeColor = sc } = 
   let color = 
@@ -197,6 +215,7 @@ let getStrokePen { strokeWidth = sw; strokeColor = sc } =
     | Black -> "black" 
     | Grey -> "grey"
     | White -> "white"
+    | Red -> "red"
   (color, sw)
 
 let getFillBrush { fillColor = fc } = 
@@ -204,6 +223,7 @@ let getFillBrush { fillColor = fc } =
   | Black -> "black" 
   | Grey -> "grey"
   | White -> "white"
+  | Red -> "none"
 
 let svg = tag "svg"
 
@@ -363,7 +383,8 @@ let toSvgElement (style : Style) = function
 let getBackgroundColor = function 
   | Grey -> "#CCCCCC"
   | Black -> "black"
-  | White -> "white"       
+  | White -> "white"
+  | Red -> "red"
 
 let view ((bounds, background, shapes) : Model) : XmlNode = 
     let (svgWidth, svgHeight) = bounds

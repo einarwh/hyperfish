@@ -12,6 +12,7 @@
     <Compile Include="Figures.fs" />
     <Compile Include="Fish.fs" />
     <Compile Include="Lizard.fs" />
+    <Compile Include="Herring.fs" />
     <Compile Include="Box.fs" />
     <Compile Include="Lens.fs" />
     <Compile Include="Picture.fs" />
