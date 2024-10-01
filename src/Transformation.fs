@@ -92,10 +92,15 @@ let getClosedPathStyle name sw hue =
     { stroke = stroke; fill = fill }
 
 let getOpenPathStyle name sw hue = 
-  let stroke = 
-    { strokeColor = getColor name hue 
-      strokeWidth = sw }
-  { stroke = Some stroke; fill = None }    
+  if isHerring name then 
+    let herringStroke = Some { strokeColor = StyleColor.Grey; strokeWidth = 2 }
+    let herringFill = None 
+    { stroke = herringStroke; fill = herringFill }
+  else 
+    let stroke = 
+      { strokeColor = getColor name hue 
+        strokeWidth = sw }
+    { stroke = Some stroke; fill = None }
 
 let getPathStyle close name sw hue = 
   if close then 

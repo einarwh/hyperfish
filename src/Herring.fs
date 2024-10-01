@@ -77,24 +77,22 @@ let herringPath =
       segments = segments }
   Path pathShape
 
-
-
 let fishEye = 
   Circle { center = (pt 0.225 0.775); radius = 0.6 }
 
 let leftCurve = 
   let curveShape = 
     { point1 = pt 0.000 0.000
-      point2 = pt 0.100 0.125
-      point3 = pt 0.100 0.375 
+      point2 = pt 0.100 0.150
+      point3 = pt 0.100 0.350 
       point4 = pt 0.000 0.500 }
   Curve curveShape
 
 let rightCurve = 
   let curveShape = 
     { point1 = pt 1.000 0.500
-      point2 = pt 0.900 0.625
-      point3 = pt 0.900 0.875 
+      point2 = pt 0.900 0.650
+      point3 = pt 0.900 0.850 
       point4 = pt 1.000 1.000 }
   Curve curveShape
 
@@ -115,5 +113,63 @@ let herringShapes =
     "herring", gillCurve
   ]
 
+let bottomCurve = 
+  let curveShape = 
+    { point1 = pt 0.500 0.000
+      point2 = pt 0.650 0.100
+      point3 = pt 0.850 0.100 
+      point4 = pt 1.000 0.000 }
+  Curve curveShape
+
+let topCurve = 
+  let curveShape = 
+    { point1 = pt 0.000 1.000
+      point2 = pt 0.150 0.900
+      point3 = pt 0.350 0.900 
+      point4 = pt 0.500 1.000 }
+  Curve curveShape
+
+let midWavePath = 
+  let segments = 
+    [ curveto (pt 0.150 0.400) (pt 0.350 0.400) (pt 0.500 0.500)
+      curveto (pt 0.650 0.600) (pt 0.850 0.600) (pt 1.000 0.500) ]
+  let pathShape = 
+    { start = pt 0.000 0.500 
+      close = false 
+      segments = segments }
+  Path pathShape
+
+let highWavePath = 
+  let segments = 
+    [ curveto (pt 0.150 0.650) (pt 0.350 0.650) (pt 0.500 0.750)
+      curveto (pt 0.650 0.850) (pt 0.850 0.850) (pt 1.000 0.750) ]
+  let pathShape = 
+    { start = pt 0.000 0.750 
+      close = false 
+      segments = segments }
+  Path pathShape
+
+let lowWavePath = 
+  let segments = 
+    [ curveto (pt 0.150 0.150) (pt 0.350 0.150) (pt 0.500 0.250)
+      curveto (pt 0.650 0.350) (pt 0.850 0.350) (pt 1.000 0.250) ]
+  let pathShape = 
+    { start = pt 0.000 0.250 
+      close = false 
+      segments = segments }
+  Path pathShape
+
+let wavesShapes = 
+  [
+    "herring", topCurve
+    "herring", bottomCurve
+    "herring", midWavePath
+    "herring", highWavePath
+    "herring", lowWavePath
+  ]
+
 let herring = 
   herringShapes 
+
+let waves = 
+  wavesShapes 

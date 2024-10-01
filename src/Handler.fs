@@ -34,6 +34,7 @@ let pictureShapesDictionary = dict [
     "o-letter", oLetter
     "lizard", lizard
     "herring", herring
+    "waves", waves
     "blank", []
 ]
 
