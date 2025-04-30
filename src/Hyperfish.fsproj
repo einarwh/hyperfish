@@ -16,6 +16,7 @@
     <Compile Include="Box.fs" />
     <Compile Include="Lens.fs" />
     <Compile Include="Picture.fs" />
+    <Compile Include="Engine.fs" />
     <Compile Include="Transformation.fs" />
     <Compile Include="Stack.fs" />
     <Compile Include="Routing.fs" />
