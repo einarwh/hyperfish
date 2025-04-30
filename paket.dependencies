@@ -4,7 +4,6 @@ storage: none
 framework: net7
 nuget coverlet.collector
 nuget giraffe
-nuget Giraffe.ViewEngine
 nuget Microsoft.NET.Test.Sdk
 nuget xunit
 nuget xunit.runner.visualstudio
